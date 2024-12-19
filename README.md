@@ -29,7 +29,7 @@
 1. Подключиться к роутеру по SSH (к Entware)
 2. Выполнить код:
 	```
-	curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/adgh-ipset-for-keenetic/refs/heads/main/adgh-ipset.sh" > /tmp/adgh-ipset.sh && chmod +x /tmp/adgh-ipset.sh && sh /tmp/adgh-ipset.sh
+	curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/hydraroute.sh" > /tmp/hydraroute.sh && chmod +x /tmp/hydraroute.sh && sh /tmp/hydraroute.sh
 	```
 3. Следовать инструкциям.
 4. Завершить настройку AdGuardHome перейдя по адресу: [http://192.168.1.1:3000/](http://192.168.1.1:3000/) (где `192.168.1.1` - IP-адрес роутера).
