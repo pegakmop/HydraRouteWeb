@@ -147,6 +147,16 @@ sed -i '/^  upstream_dns:/,/^  upstream_dns_file: ""/{
     - tls://dns.google\n    - tls://one.one.one.one\n    - tls://p0.freedns.controld.com\n    - tls://dot.sb\n    - tls://dns.nextdns.io\n    - tls://dns.quad9.net
 }' "/opt/etc/AdGuardHome/AdGuardHome.yaml"
 
+# Добавляем bootstrap DNS серверы
+echo "- добавление bootstrap DNS-серверов"
+sed -i '/^  bootstrap_dns:/,/^  fallback_dns: \[\]/{
+    /^  bootstrap_dns:/!{
+        /^  fallback_dns: \[\]/!d
+    }
+    /^  bootstrap_dns:/a \
+    - 9.9.9.9\n    - 94.140.14.14\n    - 208.67.222.222\n    - 1.1.1.1\n    - 8.8.8.8\n    - 149.112.112.10
+}' "/opt/etc/AdGuardHome/AdGuardHome.yaml"
+
 # Добавляем пользовательский фильтр для обхода блокировки ECH Cloudflare
 echo "- добавление обхода блокировки ECH Cloudflare"
 grep -q "dnstype=HTTPS,dnsrewrite=NOERROR" /root/AdGuardHome.yaml || sed -i "/user_rules:/a\  - '||*^\\\$dnstype=HTTPS,dnsrewrite=NOERROR'" /opt/etc/AdGuardHome/AdGuardHome.yaml
