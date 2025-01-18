@@ -166,7 +166,7 @@ http:
   session_ttl: 720h
 users:
   - name: admin
-    password: $2y$10$b6o19XQdb9ckUeP0.zs1Qe/7DwXAgHy4OJ7at.cz7mN2YMPSEmy6e
+    password: $2a$10$Hws7z9ojkJdRFidEroixu.waIXUPt4NsL01g7DuEtJ.3JnhQhVRbm
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -196,9 +196,9 @@ dns:
     - 8.8.8.8
     - 149.112.112.10
     - 94.140.14.14
-    - 208.67.222.222
+    - 208.67.222.22
   fallback_dns: []
-  upstream_mode: parallel
+  upstream_mode: load_balance
   fastest_timeout: 1s
   allowed_clients: []
   disallowed_clients: []
@@ -227,7 +227,7 @@ dns:
   bootstrap_prefer_ipv6: false
   upstream_timeout: 10s
   private_networks: []
-  use_private_ptr_resolvers: false
+  use_private_ptr_resolvers: true
   local_ptr_upstreams: []
   use_dns64: false
   dns64_prefixes: []
@@ -253,9 +253,9 @@ tls:
 querylog:
   dir_path: ""
   ignored: []
-  interval: 1h
+  interval: 2160h
   size_memory: 1000
-  enabled: false
+  enabled: true
   file_enabled: true
 statistics:
   dir_path: ""
@@ -271,104 +271,39 @@ filters:
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt
     name: AdAway Default Blocklist
     id: 2
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_16.txt
-    name: 'VNM: ABPVN List'
-    id: 1724459839
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_41.txt
-    name: 'POL: CERT Polska List of malicious domains'
-    id: 1724459840
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_40.txt
-    name: 'TUR: Turkish Ad Hosts'
-    id: 1724459841
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_26.txt
-    name: 'TUR: turk-adlist'
-    id: 1724459842
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_14.txt
-    name: 'POL: Polish filters for Pi-hole'
-    id: 1724459843
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_17.txt
-    name: 'SWE: Frellwit''s Swedish Hosts File'
-    id: 1724459844
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_13.txt
-    name: 'NOR: Dandelion Sprouts nordiske filtre'
-    id: 1724459845
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_20.txt
-    name: 'MKD: Macedonian Pi-hole Blocklist'
-    id: 1724459846
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_36.txt
-    name: 'LIT: EasyList Lithuania'
-    id: 1724459847
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_15.txt
-    name: 'KOR: YousList'
-    id: 1724459848
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_25.txt
-    name: 'KOR: List-KR DNS'
-    id: 1724459849
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_43.txt
-    name: 'ISR: EasyList Hebrew'
-    id: 1724459850
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_19.txt
-    name: 'IRN: PersianBlocker list'
-    id: 1724459851
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_35.txt
-    name: 'HUN: Hufilter'
-    id: 1724459852
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_22.txt
-    name: 'IDN: ABPindo'
-    id: 1724459853
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_21.txt
-    name: 'CHN: anti-AD'
-    id: 1724459854
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_29.txt
-    name: 'CHN: AdRules DNS List'
-    id: 1724459855
-  - enabled: false
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_51.txt
-    name: HaGeZi's Pro++ Blocklist
-    id: 1724459856
   - enabled: true
-    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_23.txt
-    name: WindowsSpyBlocker - Hosts spy rules
-    id: 1724459857
-  - enabled: false
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_59.txt
+    name: AdGuard DNS Popup Hosts filter
+    id: 1737211801
+  - enabled: true
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_30.txt
     name: Phishing URL Blocklist (PhishTank and OpenPhish)
-    id: 1724459858
+    id: 1737211802
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_42.txt
+    name: ShadowWhisperer's Malware List
+    id: 1737211803
   - enabled: true
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_9.txt
     name: The Big List of Hacked Malware Web Sites
-    id: 1724459859
-  - enabled: false
-    url: https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_7_Japanese/filter.txt
-    name: Japan
-    id: 1731768906
-  - enabled: false
-    url: https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/filters/filter_224_Chinese/filter.txt
-    name: China
-    id: 1731768907
+    id: 1737211804
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_63.txt
+    name: HaGeZi's Windows/Office Tracker Blocklist
+    id: 1737211805
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_7.txt
+    name: Perflyst and Dandelion Sprout's Smart-TV Blocklist
+    id: 1737211806
+  - enabled: true
+    url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_12.txt
+    name: Dandelion Sprout's Anti-Malware List
+    id: 1737211807
 whitelist_filters: []
 user_rules:
   - '||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
-  - '@@||yabs.yandex.ru^$important'
-  - '@@||mc.yandex.ru^$important'
-  - ""
+  - '||yabs.yandex.ru^$important'
+  - '||mc.yandex.ru^$important'
 dhcp:
   enabled: false
   interface_name: ""
@@ -398,6 +333,7 @@ filtering:
     enabled: false
     bing: true
     duckduckgo: true
+    ecosia: true
     google: true
     pixabay: true
     yandex: true
@@ -406,6 +342,8 @@ filtering:
   parental_block_host: family-block.dns.adguard.com
   safebrowsing_block_host: standard-block.dns.adguard.com
   rewrites: []
+  safe_fs_patterns:
+    - /opt/etc/AdGuardHome/userfilters/*
   safebrowsing_cache_size: 1048576
   safesearch_cache_size: 1048576
   parental_cache_size: 1048576
@@ -437,7 +375,7 @@ os:
   group: ""
   user: ""
   rlimit_nofile: 0
-schema_version: 28
+schema_version: 29
 EOF
 
 
