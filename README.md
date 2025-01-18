@@ -17,7 +17,8 @@
   - Instagram
   - OpenAI (ChatGPT)
   - Некоторые T-трекеры
-  - Github
+  - Discord
+  - GitHub
 
 ## Требования:
 - KeenOS версия 4.х
