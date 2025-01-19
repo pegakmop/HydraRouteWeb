@@ -166,7 +166,7 @@ http:
   session_ttl: 720h
 users:
   - name: admin
-    password: $2y$10$eBBfFs8ZCLk6rfHEPZdPEO93GywlqMjTZD2HNloopHOCUoaD2MNwq
+    password: $2y$10$hivGaXepgOtfJto5t4Ue3./Y0n2CEc1kIUI1dS/qgS5GVukcNquAO
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -414,7 +414,7 @@ if echo "$DNS_OVERRIDE" | grep -q "false"; then
         echo ""
         echo "AdGuard Home будет доступен по адресу: http://$IP_ADDRESS:3000/"
         echo "Login: admin"
-        echo "Password: keenetic"
+        echo "Password: 1234567890"
         echo ""
         echo "Для продолжения нажмите ENTER"
         read -r
@@ -434,7 +434,7 @@ echo "Установка завершена."
 echo ""
 echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
 echo "Login: admin"
-echo "Password: keenetic"
+echo "Password: 1234567890"
 echo ""
 
 # Удаляем скрипт после выполнения
