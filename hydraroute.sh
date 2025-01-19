@@ -148,10 +148,18 @@ fi
 EOF
 
 
+# Останавливаем AdGuard Home
+echo "Остановка AdGuard Home..."
+/opt/etc/init.d/S99adguardhome stop
+
 # Настройка AdGuard Home
 echo "Настройка AdGuard Home..."
-# Останавливаем AdGuard Home
-/opt/etc/init.d/S99adguardhome stop
+
+# Переменные для конфига 
+password=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
+rule1='||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
+rule2='||yabs.yandex.ru^$important'
+rule3='||mc.yandex.ru^$important'
 
 # Функция для получения IP роутера (br0)
 IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
@@ -166,7 +174,7 @@ http:
   session_ttl: 720h
 users:
   - name: admin
-    password: $2y$10$hivGaXepgOtfJto5t4Ue3./Y0n2CEc1kIUI1dS/qgS5GVukcNquAO
+    password: $password
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -300,9 +308,9 @@ filters:
     id: 1737211807
 whitelist_filters: []
 user_rules:
-  - '||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
-  - '||yabs.yandex.ru^$important'
-  - '||mc.yandex.ru^$important'
+  - '$rule1'
+  - '$rule2'
+  - '$rule3'
 dhcp:
   enabled: false
   interface_name: ""
@@ -377,7 +385,6 @@ os:
 schema_version: 29
 EOF
 
-
 # Создание базового списка доменов для перенаправления
 echo "Создание базового списка доменов для перенаправления..."
 cat << EOF > /opt/etc/AdGuardHome/ipset.conf
@@ -414,7 +421,7 @@ if echo "$DNS_OVERRIDE" | grep -q "false"; then
         echo ""
         echo "AdGuard Home будет доступен по адресу: http://$IP_ADDRESS:3000/"
         echo "Login: admin"
-        echo "Password: 1234567890"
+        echo "Password: keenetic"
         echo ""
         echo "Для продолжения нажмите ENTER"
         read -r
@@ -434,7 +441,7 @@ echo "Установка завершена."
 echo ""
 echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
 echo "Login: admin"
-echo "Password: 1234567890"
+echo "Password: keenetic"
 echo ""
 
 # Удаляем скрипт после выполнения
