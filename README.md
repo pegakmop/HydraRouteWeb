@@ -33,7 +33,9 @@
 	curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
 	```
 3. Следовать инструкциям.
-4. Проверить работу перейдя на [2ip.ru](https://2ip.ru/). В поле `Ваш IP адрес:` должен отображаться IP-адрес подключения (VPN), через которое вы перенаправляете трафик.
+
+
+	Проверить работу можно перейдя на [2ip.ru](https://2ip.ru/). В поле `Ваш IP адрес:` должен отображаться IP-адрес подключения (VPN), через которое вы перенаправляете трафик.
 
 ## Дополнительная информация:
 **Как добавить домены в ipset**
