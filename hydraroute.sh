@@ -166,7 +166,7 @@ http:
   session_ttl: 720h
 users:
   - name: admin
-    password: $2a$10$Hws7z9ojkJdRFidEroixu.waIXUPt4NsL01g7DuEtJ.3JnhQhVRbm
+    password: $2y$10$eBBfFs8ZCLk6rfHEPZdPEO93GywlqMjTZD2HNloopHOCUoaD2MNwq
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -196,7 +196,6 @@ dns:
     - 8.8.8.8
     - 149.112.112.10
     - 94.140.14.14
-    - 208.67.222.22
   fallback_dns: []
   upstream_mode: load_balance
   fastest_timeout: 1s
