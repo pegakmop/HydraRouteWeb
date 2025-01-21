@@ -68,7 +68,7 @@
 	<details>
 	<summary>P.S. Web панель для легкого редактирования ipset в разработке.</summary>
 	
-	![Image](https://github.com/user-attachments/assets/85c8d144-1bd2-4b2a-b84b-ce56ce1477fc)
+	![Image](https://github.com/user-attachments/assets/e75810c4-262f-4292-bba9-8cd450604453)
 	</details>
 <details>
 <summary>Некоторые моменты работы скрипта</summary>
