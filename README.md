@@ -65,11 +65,11 @@
 	```
 	/opt/etc/init.d/S99adguardhome restart
 	```
-<details>
-<summary>P.S. Web панель для легкого редактирования ipset в разработке.</summary>
-	preAlpha
-![Image](https://github.com/user-attachments/assets/85c8d144-1bd2-4b2a-b84b-ce56ce1477fc)
-</details>
+	<details>
+	<summary>P.S. Web панель для легкого редактирования ipset в разработке.</summary>
+	
+	![Image](https://github.com/user-attachments/assets/85c8d144-1bd2-4b2a-b84b-ce56ce1477fc)
+	</details>
 <details>
 <summary>Некоторые моменты работы скрипта</summary>
 
