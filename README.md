@@ -36,7 +36,7 @@
 	```
 	curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
 	```
-3. Ввести имя VPN соединения.
+3. Выбрать VPN из списка.
 
 ## Дополнительная информация:
 **Как добавить домены в ipset**
