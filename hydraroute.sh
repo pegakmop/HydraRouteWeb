@@ -260,15 +260,15 @@ tls:
 querylog:
   dir_path: ""
   ignored: []
-  interval: 2160h
+  interval: 24h
   size_memory: 1000
-  enabled: true
+  enabled: false
   file_enabled: true
 statistics:
   dir_path: ""
   ignored: []
   interval: 24h
-  enabled: true
+  enabled: false
 filters:
   - enabled: true
     url: https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
