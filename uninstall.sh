@@ -2,7 +2,7 @@
 
 # удаление пакетов
 remove_packages() {
-    PACKAGES="adguardhome-go ipset iptables ip-full"
+    PACKAGES="adguardhome-go ipset iptables"
     
     for pkg in $PACKAGES; do
         echo "Удаление пакета $pkg..."
@@ -34,7 +34,7 @@ if echo "$DNS_OVERRIDE" | grep -q "true"; then
     else
         opkg install coreutils-nohup
         echo "Версия прошивки ниже $REQUIRED_VERSION, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
-        nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && reboot" > /dev/null 2>&1 &
+        nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 5 && reboot" > /dev/null 2>&1 &
     fi
 fi
 
@@ -43,6 +43,7 @@ echo "Включаем системный DNS..."
 ndmc -c 'opkg no dns-override'
 ndmc -c 'system configuration save'
 echo "Удаление завершено (╥_╥)"
+sleep 5
 rm -- "$0"
 echo "Перезагрузка..."
 reboot
