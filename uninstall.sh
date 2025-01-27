@@ -43,5 +43,6 @@ echo "Включаем системный DNS..."
 ndmc -c 'opkg no dns-override'
 ndmc -c 'system configuration save'
 echo "Удаление завершено (╥_╥)"
+rm -- "$0"
 echo "Перезагрузка..."
 reboot
