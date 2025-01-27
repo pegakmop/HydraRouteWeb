@@ -425,7 +425,7 @@ if echo "$DNS_OVERRIDE" | grep -q "false"; then
         echo ""
         echo "Для продолжения нажмите ENTER"
         read -r
-        nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && reboot" > /dev/null 2>&1 &
+        nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 5 && reboot" > /dev/null 2>&1 &
     fi
 fi
 
@@ -433,7 +433,7 @@ fi
 echo "Отключаем системный DNS..."
 ndmc -c 'opkg dns-override'
 ndmc -c 'system configuration save'
-
+sleep 5
 
 # Информационные сообщения
 echo ""
