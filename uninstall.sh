@@ -1,34 +1,62 @@
 #!/bin/sh
 
-# удаление пакетов
-remove_packages() {
-    PACKAGES="adguardhome-go ipset iptables"
-    
-    for pkg in $PACKAGES; do
-        echo "Удаление пакета $pkg..."
-        opkg remove "$pkg" || echo "Не удалось удалить пакет $pkg"
+# Функция анимации
+loading_animation() {
+  local pid=$1
+  local message=$2
+  local spin='-\|/'
+
+  echo -n "$message... "
+
+  while kill -0 $pid 2>/dev/null; do
+    for i in $(seq 0 3); do
+      echo -ne "\b${spin:$i:1}"
+      usleep 100000  # 0.1 сек
     done
+  done
+
+  echo -e "\b✔ Готово!"
 }
 
-echo "Удаление пакетов установленных HydraRoute..."
-remove_packages
 
-# удаление файлов
-echo "Удаление файлов созданных HydraRoute..."
-rm -f /opt/etc/init.d/S52ipset
-rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
-rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
-rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh
-rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh
-rm -f /opt/var/log/AdGuardHome.log
-rm -rf /opt/etc/AdGuardHome/
+# Функция удаления пакетов
+perform_opkg_uninstall() {
+  /opt/etc/init.d/S99adguardhome kill >/dev/null 2>&1
+  PACKAGES="adguardhome-go ipset iptables node"
+  for pkg in $PACKAGES; do
+    opkg remove "$pkg" >/dev/null 2>&1
+  done
+}
 
-echo "Удаление web панели..."
-/opt/etc/init.d/S99hpanel kill >/dev/null 2>&1
-chmod -R 777 /opt/etc/HydraRoute/ >/dev/null 2>&1
-chmod 777 /opt/etc/init.d/S99hpanel >/dev/null 2>&1
-rm -rf /opt/etc/HydraRoute/ >/dev/null 2>&1
-rm -r /opt/etc/init.d/S99hpanel >/dev/null 2>&1
+# Функция удаления файлов
+perform_files_uninstall() {
+  rm -f /opt/etc/init.d/S52ipset >/dev/null 2>&1
+  rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh >/dev/null 2>&1
+  rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh >/dev/null 2>&1
+  rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh >/dev/null 2>&1
+  rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh >/dev/null 2>&1
+  rm -f /opt/var/log/AdGuardHome.log >/dev/null 2>&1
+  rm -rf /opt/etc/AdGuardHome/ >/dev/null 2>&1
+}
+
+# Функция удаления веб-панели
+perform_hpanel_uninstall() {
+  /opt/etc/init.d/S99hpanel kill >/dev/null 2>&1
+  chmod -R 777 /opt/etc/HydraRoute/ >/dev/null 2>&1
+  chmod 777 /opt/etc/init.d/S99hpanel >/dev/null 2>&1
+  rm -rf /opt/etc/HydraRoute/ >/dev/null 2>&1
+  rm -r /opt/etc/init.d/S99hpanel >/dev/null 2>&1
+}
+
+perform_opkg_uninstall >/dev/null 2>&1 &
+loading_animation $! "Удаление opkg пакетов"
+
+perform_files_uninstall >/dev/null 2>&1 &
+loading_animation $! "Удаление файлов HydraRoute"
+
+perform_files_uninstall >/dev/null 2>&1 &
+loading_animation $! "Удаление веб-панели"
+
 
 ## Включение системного DNS сервера
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
@@ -39,17 +67,20 @@ if echo "$DNS_OVERRIDE" | grep -q "true"; then
     if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
         echo "Прошивка выше $REQUIRED_VERSION..."
     else
-        opkg install coreutils-nohup
+        opkg install coreutils-nohup >/dev/null 2>&1 &
         echo "Версия прошивки ниже $REQUIRED_VERSION, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
-        nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 5 && reboot" > /dev/null 2>&1 &
+		/opt/bin/nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot"
     fi
 fi
 
 # Прошивка выше 4.2.3
-echo "Включаем системный DNS..."
-ndmc -c 'opkg no dns-override'
-ndmc -c 'system configuration save'
+ndmc -c 'opkg no dns-override' >/dev/null 2>&1 &
+loading_animation $! "Включение системного DNS"
+
+ndmc -c 'system configuration save' >/dev/null 2>&1 &
+loading_animation $! "Сохранение конфигурации"
+
+sleep 3
 echo "Удаление завершено (╥_╥)"
-sleep 5
 echo "Перезагрузка..."
 reboot
