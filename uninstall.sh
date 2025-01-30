@@ -51,6 +51,5 @@ ndmc -c 'opkg no dns-override'
 ndmc -c 'system configuration save'
 echo "Удаление завершено (╥_╥)"
 sleep 5
-rm -- "$0"
 echo "Перезагрузка..."
 reboot
