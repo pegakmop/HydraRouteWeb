@@ -23,6 +23,13 @@ rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh
 rm -f /opt/var/log/AdGuardHome.log
 rm -rf /opt/etc/AdGuardHome/
 
+echo "Удаление web панели..."
+/opt/etc/init.d/S99hpanel kill >/dev/null 2>&1
+chmod -R 777 /opt/etc/HydraRoute/ >/dev/null 2>&1
+chmod 777 /opt/etc/init.d/S99hpanel >/dev/null 2>&1
+rm -rf /opt/etc/HydraRoute/ >/dev/null 2>&1
+rm -r /opt/etc/init.d/S99hpanel >/dev/null 2>&1
+
 ## Включение системного DNS сервера
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
 REQUIRED_VERSION="4.2.3"
