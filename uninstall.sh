@@ -22,7 +22,7 @@ loading_animation() {
 # Функция удаления пакетов
 perform_opkg_uninstall() {
   /opt/etc/init.d/S99adguardhome kill >/dev/null 2>&1
-  PACKAGES="adguardhome-go ipset iptables node"
+  PACKAGES="adguardhome-go ipset iptables node-npm node"
   for pkg in $PACKAGES; do
     opkg remove "$pkg" >/dev/null 2>&1
   done
