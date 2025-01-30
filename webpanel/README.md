@@ -4,7 +4,7 @@ curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads
 ```
 **Только панель, без скрипта HydraRoute**.
 
-Управление панелью:
+Управление панелью (терминал entware):
 ```
 /opt/etc/init.d/S99hpanel restart
 ```
