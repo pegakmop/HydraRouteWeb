@@ -182,7 +182,7 @@ language: ""
 theme: auto
 dns:
   bind_hosts:
-    - $IP_ADDRESS
+    - 0.0.0.0
   port: 53
   anonymize_client_ip: false
   ratelimit: 20
