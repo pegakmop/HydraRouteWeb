@@ -30,13 +30,16 @@ perform_opkg_uninstall() {
 
 # Функция удаления файлов
 perform_files_uninstall() {
-  rm -f /opt/etc/init.d/S52ipset >/dev/null 2>&1
+  chmod -R 777 /opt/etc/AdGuardHome/ >/dev/null 2>&1
+  chmod 777 /opt/etc/init.d/S52ipset >/dev/null 2>&1
+  chmod 777 /opt/var/log/AdGuardHome.log >/dev/null 2>&1
   rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh >/dev/null 2>&1
   rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh >/dev/null 2>&1
   rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh >/dev/null 2>&1
   rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh >/dev/null 2>&1
-  rm -f /opt/var/log/AdGuardHome.log >/dev/null 2>&1
+  rm -f /opt/etc/init.d/S52ipset >/dev/null 2>&1
   rm -rf /opt/etc/AdGuardHome/ >/dev/null 2>&1
+  rm -f /opt/var/log/AdGuardHome.log >/dev/null 2>&1
 }
 
 # Функция удаления веб-панели
