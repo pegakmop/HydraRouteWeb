@@ -54,7 +54,7 @@ loading_animation $! "Удаление opkg пакетов"
 perform_files_uninstall >/dev/null 2>&1 &
 loading_animation $! "Удаление файлов HydraRoute"
 
-perform_files_uninstall >/dev/null 2>&1 &
+perform_hpanel_uninstall >/dev/null 2>&1 &
 loading_animation $! "Удаление веб-панели"
 
 
