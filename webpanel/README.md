@@ -8,4 +8,4 @@ curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads
 ```
 /opt/etc/init.d/S99hpanel restart
 ```
-Доступные команды: `start|stop|restart|check|status|kill|reconfigure`
+Доступные команды: `start|stop|restart|check|status|kill`
