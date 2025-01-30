@@ -205,7 +205,7 @@ dns:
     - 149.112.112.10
     - 94.140.14.14
   fallback_dns: []
-  upstream_mode: parallel
+  upstream_mode: load_balance
   fastest_timeout: 1s
   allowed_clients: []
   disallowed_clients: []
