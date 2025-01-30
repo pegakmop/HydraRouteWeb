@@ -94,5 +94,3 @@ echo "Установка завершена."
 echo ""
 echo "Панель управления HydraRoute доступна по адресу: http://$IP_ADDRESS:2000/"
 echo ""
-
-rm -- "$0"
