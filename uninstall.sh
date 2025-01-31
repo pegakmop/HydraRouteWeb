@@ -68,22 +68,18 @@ DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
 
 if echo "$DNS_OVERRIDE" | grep -q "true"; then
     if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-        echo "Прошивка выше $REQUIRED_VERSION..."
+        echo "Включение системного DNS..."
+		ndmc -c 'opkg no dns-override'
+		echo "Сохранение конфигурации..."
+		ndmc -c 'system configuration save'
+		sleep 3
     else
-        opkg install coreutils-nohup >/dev/null 2>&1 &
+        opkg install coreutils-nohup >/dev/null 2>&1
         echo "Версия прошивки ниже $REQUIRED_VERSION, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
-		/opt/bin/nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot"
+		/opt/bin/nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >/dev/null 2>&1
     fi
 fi
 
-# Прошивка выше 4.2.3
-echo "Включение системного DNS..."
-ndmc -c 'opkg no dns-override'
-
-echo "Сохранение конфигурации..."
-ndmc -c 'system configuration save'
-
-sleep 3
 echo "Удаление завершено (╥_╥)"
 echo "Перезагрузка..."
 reboot
