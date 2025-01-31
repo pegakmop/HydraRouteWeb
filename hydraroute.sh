@@ -1,8 +1,36 @@
 #!/bin/sh
 
-# Функция для получения списка интерфейсов
+# Служебные функции и переменные
+REQUIRED_VERSION="4.2.3"
+IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
+DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
+## Переменные для конфига AGH
+password=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
+rule1='||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
+rule2='||yabs.yandex.ru^$important'
+rule3='||mc.yandex.ru^$important'
+## анимация
+loading_animation() {
+  local pid=$1
+  local message=$2
+  local spin='-\|/'
+
+  echo -n "$message... "
+
+  while kill -0 $pid 2>/dev/null; do
+    for i in $(seq 0 3); do
+      echo -ne "\b${spin:$i:1}"
+      usleep 100000  # 0.1 сек
+    done
+  done
+
+  echo -e "\b✔ Готово!"
+}
+
+# Функция для получения списка и выбора интерфейса
 get_interfaces() {
-    # Выводим список интерфейсов для выбора
+    ## Выводим список интерфейсов для выбора
     echo "Доступные интерфейсы:"
     i=1
     interfaces=$(ip a | sed -n 's/.*: \(.*\): <.*UP.*/\1/p')
@@ -22,63 +50,36 @@ get_interfaces() {
         fi
     done
 
-    # Запрашиваем у пользователя имя интерфейса с проверкой ввода
+    ## Запрашиваем у пользователя имя интерфейса с проверкой ввода
     while true; do
         read -p "Введите ИМЯ интерфейса, через которое будет перенаправляться трафик: " net_interface
 
-        # Проверяем, существует ли введенное имя в списке
+        ### Проверяем, существует ли введенное имя в списке
         if echo "$interface_list" | grep -qw "$net_interface"; then
-            # Если интерфейс найден, завершаем цикл
+            #### Если интерфейс найден, завершаем цикл
             echo "Выбран интерфейс: $net_interface"
             break
         else
-            # Если введен неверный интерфейс, выводим сообщение об ошибке
+            #### Если введен неверный интерфейс, выводим сообщение об ошибке
             echo "Неверный выбор, необходимо ввести ИМЯ интерфейса из списка."
         fi
     done
 }
 
+# Функция установки пакетов
+opkg_install() {
+  opkg update >/dev/null 2>&1
+  /opt/etc/init.d/S99adguardhome kill >/dev/null 2>&1
+  PACKAGES="adguardhome-go ipset iptables ip-full"
+  for pkg in $PACKAGES; do
+    opkg install "$pkg" >/dev/null 2>&1
+  done
+}
 
-# Дисклаймер
-echo ""
-echo "Во избежание сбоев настоятельно рекомендуется удалить ранее используемый софт, реализующий маршрутизацию трафика."
-echo "- идеальным решением будет очистить носитель и переустановить entware."
-echo ""
-echo "PS: Если нужного интерфейса нет в списке значит он не активен (нет соединения) или выключен."
-echo ""
-
-## Основная часть скрипта
-# Вызов функции для получения интерфейса
-get_interfaces
-
-## Установка пакетов с отслеживанием результата, остановка в случае ошибки
-echo "Обновление списка доступных пакетов..."
-opkg update
-
-# Список пакетов для установки
-PACKAGES="adguardhome-go ipset iptables ip-full"
-
-# Установка пакетов
-for pkg in $PACKAGES; do
-    echo "Установка $pkg..."
-    ERROR_MSG=$(opkg install "$pkg" 2>&1)
-    ERROR_CODE=$?
-
-    if echo "$ERROR_MSG" | grep -qi "error\|failed"; then
-        echo "Ошибка при установке пакета \"$pkg\":"
-        echo "$ERROR_MSG"
-        echo ""
-        echo "Установка HydraRoute прервана."
-        exit 1
-    fi
-done
-
-echo "Необходимые пакеты установлены успешно, продолжаем..."
-
-
-# Создание ipset
-echo "Создаем ipset..."
-cat << EOF > /opt/etc/init.d/S52ipset
+# Функция формирования файлов
+files_create() {
+	## ipset
+	cat << EOF > /opt/etc/init.d/S52ipset
 #!/bin/sh
 
 PATH=/opt/sbin:/opt/bin:/opt/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -90,10 +91,9 @@ if [ "\$1" = "start" ]; then
     ip -6 rule add fwmark 1001 table 1001
 fi
 EOF
-
-# Создание скриптов маршрутизации
-echo "Создание скриптов маршрутизации..."
-cat << EOF > /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
+	
+	## скрипты маршрутизации
+	cat << EOF > /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
 #!/bin/sh
 
 [ "\$system_name" == "$net_interface" ] || exit 0
@@ -104,8 +104,8 @@ if [ -z "\$(ip route list table 1001)" ]; then
     ip route add default dev \$system_name table 1001
 fi
 EOF
-
-cat << EOF > /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
+	
+	cat << EOF > /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
 #!/bin/sh
 
 [ "\$system_name" == "$net_interface" ] || exit 0
@@ -116,10 +116,9 @@ if [ -z "\$(ip -6 route list table 1001)" ]; then
     ip -6 route add default dev \$system_name table 1001
 fi
 EOF
-
-# Создание скриптов маркировки трафика
-echo "Создание скриптов маркировки трафика..."
-cat << EOF > /opt/etc/ndm/netfilter.d/010-bypass.sh
+	
+	## cкрипты маркировки трафика
+	cat << EOF > /opt/etc/ndm/netfilter.d/010-bypass.sh
 #!/bin/sh
 
 [ "\$type" == "ip6tables" ] && exit
@@ -132,8 +131,8 @@ if [ -z "\$(iptables-save | grep bypass)" ]; then
      iptables -w -t mangle -A PREROUTING ! -i $net_interface -m set --match-set bypass dst -j CONNMARK --restore-mark
 fi
 EOF
-
-cat << EOF > /opt/etc/ndm/netfilter.d/011-bypass6.sh
+	
+	cat << EOF > /opt/etc/ndm/netfilter.d/011-bypass6.sh
 #!/bin/sh
 
 [ "\$type" != "ip6tables" ] && exit
@@ -146,26 +145,14 @@ if [ -z "\$(ip6tables-save | grep bypass6)" ]; then
      ip6tables -w -t mangle -A PREROUTING ! -i $net_interface -m set --match-set bypass6 dst -j CONNMARK --restore-mark
 fi
 EOF
+}
 
-
-# Останавливаем AdGuard Home
-echo "Остановка AdGuard Home..."
-/opt/etc/init.d/S99adguardhome stop
-
-# Настройка AdGuard Home
-echo "Настройка AdGuard Home..."
-
-# Переменные для конфига 
-password=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
-rule1='||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
-rule2='||yabs.yandex.ru^$important'
-rule3='||mc.yandex.ru^$important'
-
-# Функция для получения IP роутера (br0)
-IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
-
-# Создаем дефолтный конфиг AdGuard Home
-cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
+# Функция настройки AGH
+agh_setup() {
+	## останавливаем AdGuard Home
+	/opt/etc/init.d/S99adguardhome stop >/dev/null 2>&1
+	## конфиг AdGuard Home
+	cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
 http:
   pprof:
     port: 6060
@@ -384,10 +371,11 @@ os:
   rlimit_nofile: 0
 schema_version: 29
 EOF
+}
 
-# Создание базового списка доменов для перенаправления
-echo "Создание базового списка доменов для перенаправления..."
-cat << EOF > /opt/etc/AdGuardHome/ipset.conf
+# Функция базовый список доменов
+domain_add() {
+	cat << EOF > /opt/etc/AdGuardHome/ipset.conf
 2ip.ru/bypass,bypass6
 googlevideo.com,ggpht.com,googleapis.com,googleusercontent.com,gstatic.com,google.com,nhacmp3youtube.com,youtu.be,youtube.com,ytimg.com/bypass,bypass6
 cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,ig.me,igcdn.com,igsonar.com,igtv.com,imstagram.com,imtagram.com,instaadder.com,instachecker.com,instafallow.com,instafollower.com,instagainer.com,instagda.com,instagify.com,instagmania.com,instagor.com,instagram.fkiv7-1.fna.fbcdn.net,instagram-brand.com,instagram-engineering.com,instagramhashtags.net,instagram-help.com,instagramhilecim.com,instagramhilesi.org,instagramium.com,instagramizlenme.com,instagramkusu.com,instagramlogin.com,instagrampartners.com,instagramphoto.com,instagram-press.com,instagram-press.net,instagramq.com,instagramsepeti.com,instagramtips.com,instagramtr.com,instagy.com,instamgram.com,instanttelegram.com,instaplayer.net,instastyle.tv,instgram.com,oninstagram.com,onlineinstagram.com,online-instagram.com,web-instagram.net,wwwinstagram.com/bypass,bypass6
@@ -395,58 +383,95 @@ cdninstagram.com,instagram.com,bookstagram.com,carstagram.com,chickstagram.com,i
 chatgpt.com,openai.com,oaistatic.com,files.oaiusercontent.com,gpt3-openai.com,openai.fund,openai.org/bypass,bypass6
 github.com,githubusercontent.com,githubcopilot.com/bypass,bypass6
 EOF
+}
+
+# Функция установки прав на скрипты
+chmod_set() {
+	chmod +x /opt/etc/init.d/S52ipset
+	chmod +x /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh >/dev/null 2>&1
+	chmod +x /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh >/dev/null 2>&1
+	chmod +x /opt/etc/ndm/netfilter.d/010-bypass.sh >/dev/null 2>&1
+	chmod +x /opt/etc/ndm/netfilter.d/011-bypass6.sh >/dev/null 2>&1
+}
+
+# Функция проверки dns-override и версии прошивки
+dns_check() {
+	if echo "$DNS_OVERRIDE" | grep -q "false"; then
+	    if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
+	        dns_off >/dev/null 2>&1
+	    else
+			dns_off_sh
+		fi
+	fi
+}
+
+# Функция отклчюения системного DNS через "nohup"
+dns_off_sh() {
+	opkg install coreutils-nohup >/dev/null 2>&1
+	echo "Отключение системного DNS..."
+	echo "Прошивка устройства меньше $REQUIRED_VERSION версии, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
+	echo ""
+	echo "AdGuard Home будет доступен по адресу: http://$IP_ADDRESS:3000/"
+	echo "Login: admin"
+	echo "Password: keenetic"
+	echo ""
+	echo "Для продолжения нажмите ENTER"
+	read -r
+	/opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >/dev/null 2>&1
+}
+
+# Функция отклчюения системного DNS стандартно
+dns_off() {
+	ndmc -c 'opkg dns-override' 2>&1 &
+	ndmc -c 'system configuration save' 2>&1 &
+	sleep 3
+}
+
+# Функция информационное сообщение
+final_info() {
+	echo ""
+	echo "Установка завершена."
+	echo ""
+	echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
+	echo "Login: admin"
+	echo "Password: keenetic"
+	echo ""
+	echo "Нажмите Enter для перезагрузки (обязательно)."
+}
+
+# Запрос интерфейса у пользователя
+get_interfaces
+
+# Установка пакетов
+opkg_install >/dev/null 2>&1 &
+loading_animation $! "Установка необходимых пакетов"
+
+# Формирование скриптов 
+files_create >/dev/null 2>&1 &
+loading_animation $! "Формируем скрипты"
+
+# Настройка AdGuard Home
+agh_setup >/dev/null 2>&1 &
+loading_animation $! "Настройка AdGuard Home"
+
+# Добавление доменов в ipset
+domain_add >/dev/null 2>&1 &
+loading_animation $! "Добавление доменов в ipset"
 
 # Установка прав на выполнение скриптов
-echo "Установка прав на выполнение скриптов..."
-chmod +x /opt/etc/init.d/S52ipset
-chmod +x /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
-chmod +x /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
-chmod +x /opt/etc/ndm/netfilter.d/010-bypass.sh
-chmod +x /opt/etc/ndm/netfilter.d/011-bypass6.sh
+chmod_set >/dev/null 2>&1 &
+loading_animation $! "Установка прав на выполнение скриптов"
 
+# Отключение системного DNS и сохранение
+dns_check
+loading_animation $! "Отключение системного DNS"
 
-## Отключение системного DNS сервера
-# Проверка системного DNS и версии прошивки
-VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
-REQUIRED_VERSION="4.2.3"
-DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
-
-if echo "$DNS_OVERRIDE" | grep -q "false"; then
-    if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-        echo "Прошивка устройства соответствует требуемой."
-    else
-        opkg install coreutils-nohup
-        echo "Прошивка устройства меньше $REQUIRED_VERSION версии, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
-        echo ""
-        echo "AdGuard Home будет доступен по адресу: http://$IP_ADDRESS:3000/"
-        echo "Login: admin"
-        echo "Password: keenetic"
-        echo ""
-        echo "Для продолжения нажмите ENTER"
-        read -r
-        nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 5 && reboot" > /dev/null 2>&1 &
-    fi
-fi
-
-# Прошивка соответствует требованиям
-echo "Отключаем системный DNS..."
-ndmc -c 'opkg dns-override'
-ndmc -c 'system configuration save'
-sleep 5
-
-# Информационные сообщения
-echo ""
-echo "Установка завершена."
-echo ""
-echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
-echo "Login: admin"
-echo "Password: keenetic"
-echo ""
+# Информационное сообщение
+final_info
 
 # Удаляем скрипт после выполнения
 rm -- "$0"
 
 # Ждем Enter и ребутимся
-echo "Нажмите Enter для перезагрузки (обязательно)."
 read -r
 reboot
