@@ -77,11 +77,11 @@ if echo "$DNS_OVERRIDE" | grep -q "true"; then
 fi
 
 # Прошивка выше 4.2.3
-ndmc -c 'opkg no dns-override' >/dev/null 2>&1 &
-loading_animation $! "Включение системного DNS"
+echo "Включение системного DNS..."
+ndmc -c 'opkg no dns-override'
 
-ndmc -c 'system configuration save' >/dev/null 2>&1 &
-loading_animation $! "Сохранение конфигурации"
+echo "Сохранение конфигурации..."
+ndmc -c 'system configuration save'
 
 sleep 3
 echo "Удаление завершено (╥_╥)"
