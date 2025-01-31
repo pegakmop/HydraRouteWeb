@@ -69,9 +69,9 @@ DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
 if echo "$DNS_OVERRIDE" | grep -q "true"; then
     if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
         echo "Включение системного DNS..."
-		/opt/bin/nohup sh ndmc -c 'opkg no dns-override'
+		/opt/bin/sh "ndmc -c 'opkg no dns-override'"
 		echo "Сохранение конфигурации..."
-		/opt/bin/nohup sh ndmc -c 'system configuration save'
+		/opt/bin/sh "ndmc -c 'system configuration save'"
 		sleep 3
     else
         opkg install coreutils-nohup >/dev/null 2>&1
