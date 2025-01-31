@@ -387,7 +387,7 @@ EOF
 
 # Функция установки прав на скрипты
 chmod_set() {
-	chmod +x /opt/etc/init.d/S52ipset
+	chmod +x /opt/etc/init.d/S52ipset >/dev/null 2>&1
 	chmod +x /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh >/dev/null 2>&1
 	chmod +x /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh >/dev/null 2>&1
 	chmod +x /opt/etc/ndm/netfilter.d/010-bypass.sh >/dev/null 2>&1
@@ -422,8 +422,8 @@ dns_off_sh() {
 
 # Функция отклчюения системного DNS стандартно
 dns_off() {
-	ndmc -c 'opkg dns-override' 2>&1 &
-	ndmc -c 'system configuration save' 2>&1 &
+	ndmc -c 'opkg dns-override' 2>&1
+	ndmc -c 'system configuration save' 2>&1
 	sleep 3
 }
 
