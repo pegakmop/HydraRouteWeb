@@ -78,10 +78,10 @@ fi
 
 # Прошивка выше 4.2.3
 echo "Включение системного DNS..."
-ndmc -c 'opkg no dns-override'
+ndmc -c 'opkg no dns-override' 2>/dev/null
 
 echo "Сохранение конфигурации..."
-ndmc -c 'system configuration save'
+ndmc -c 'system configuration save' 2>/dev/null
 
 sleep 3
 echo "Удаление завершено (╥_╥)"
