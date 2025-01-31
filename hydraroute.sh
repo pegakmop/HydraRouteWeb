@@ -396,13 +396,13 @@ chmod_set() {
 
 # Функция проверки dns-override и версии прошивки
 dns_check() {
-	if echo "$DNS_OVERRIDE" | grep -q "false"; then
-	    if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-	        dns_off >/dev/null 2>&1
-	    else
-			dns_off_sh
-		fi
-	fi
+    if echo "$DNS_OVERRIDE" | grep -q "false"; then
+        if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
+            dns_off >/dev/null 2>&1
+        else
+            dns_off_sh
+        fi
+    fi
 }
 
 # Функция отклчюения системного DNS через "nohup"
