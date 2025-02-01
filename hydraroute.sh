@@ -1,15 +1,14 @@
 #!/bin/sh
 
 # Служебные функции и переменные
-REQUIRED_VERSION="4.2.3"
 LOG="/opt/var/log/HydraRoute.log"
 echo "$(date "+%Y-%m-%d %H:%M:%S") Запуск установки" >> "$LOG"
+REQUIRED_VERSION="4.2.3"
 IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
-DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
 AVAILABLE_SPACE=$(df /opt | awk 'NR==2 {print $4}')
-## Переменные для конфига AGH
-password=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
+## переменные для конфига AGH
+PASSWORD=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
 rule1='||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
 rule2='||yabs.yandex.ru^$important'
 rule3='||mc.yandex.ru^$important'
@@ -31,20 +30,18 @@ animation() {
   echo -e "\b✔ Готово!"
 }
 
-# Функция для получения списка и выбора интерфейса
+# Получение списка и выбор интерфейса
 get_interfaces() {
-    ## Выводим список интерфейсов для выбора
+    ## выводим список интерфейсов для выбора
     echo "Доступные интерфейсы:"
     i=1
     interfaces=$(ip a | sed -n 's/.*: \(.*\): <.*UP.*/\1/p')
     interface_list=""
     for iface in $interfaces; do
-        # Проверяем, существует ли интерфейс, игнорируя ошибки 'ip: can't find device'
+        ## проверяем, существует ли интерфейс, игнорируя ошибки 'ip: can't find device'
         if ip a show "$iface" &>/dev/null; then
-            # Получаем IP-адрес интерфейса, используя ip a show
             ip_address=$(ip a show "$iface" | grep -oP 'inet \K[\d.]+')
 
-            # Если IP-адрес найден, выводим интерфейс и его IP
             if [ -n "$ip_address" ]; then
                 echo "$i. $iface: $ip_address"
                 interface_list="$interface_list $iface"
@@ -53,33 +50,30 @@ get_interfaces() {
         fi
     done
 
-    ## Запрашиваем у пользователя имя интерфейса с проверкой ввода
+    ## запрашиваем у пользователя имя интерфейса с проверкой ввода
     while true; do
         read -p "Введите ИМЯ интерфейса, через которое будет перенаправляться трафик: " net_interface
 
-        ### Проверяем, существует ли введенное имя в списке
         if echo "$interface_list" | grep -qw "$net_interface"; then
             #### Если интерфейс найден, завершаем цикл
             echo "Выбран интерфейс: $net_interface"
             break
         else
-            #### Если введен неверный интерфейс, выводим сообщение об ошибке
             echo "Неверный выбор, необходимо ввести ИМЯ интерфейса из списка."
         fi
     done
 }
 
-# Функция установки пакетов
+# Установка пакетов
 opkg_install() {
   opkg update
-  /opt/etc/init.d/S99adguardhome kill
   PACKAGES="adguardhome-go ipset iptables ip-full"
   for pkg in $PACKAGES; do
     opkg install "$pkg"
   done
 }
 
-# Функция формирования файлов
+# Формирование файлов
 files_create() {
 	## ipset
 	cat << EOF > /opt/etc/init.d/S52ipset
@@ -150,10 +144,10 @@ fi
 EOF
 }
 
-# Функция настройки AGH
+# Настройки AGH
 agh_setup() {
 	## останавливаем AdGuard Home
-	/opt/etc/init.d/S99adguardhome stop >/dev/null 2>&1
+	/opt/etc/init.d/S99adguardhome stop
 	## конфиг AdGuard Home
 	cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
 http:
@@ -164,7 +158,7 @@ http:
   session_ttl: 720h
 users:
   - name: admin
-    password: $password
+    password: $PASSWORD
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
@@ -376,7 +370,7 @@ schema_version: 29
 EOF
 }
 
-# Функция базовый список доменов
+# Базовый список доменов
 domain_add() {
 	cat << EOF > /opt/etc/AdGuardHome/ipset.conf
 2ip.ru/bypass,bypass6
@@ -388,7 +382,7 @@ github.com,githubusercontent.com,githubcopilot.com/bypass,bypass6
 EOF
 }
 
-# Функция установки прав на скрипты
+# Установка прав на скрипты
 chmod_set() {
 	chmod +x /opt/etc/init.d/S52ipset
 	chmod +x /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
@@ -397,8 +391,8 @@ chmod_set() {
 	chmod +x /opt/etc/ndm/netfilter.d/011-bypass6.sh
 }
 
-# Установка hpanel
-install_hpanel() {
+# Установка web-панели
+install_panel() {
   opkg install node tar
   mkdir -p /opt/tmp
   /opt/etc/init.d/S99hpanel kill
@@ -416,41 +410,38 @@ install_hpanel() {
   chmod 755 /opt/etc/HydraRoute/hpanel.js
 }
 
-# Функция проверки dns-override и версии прошивки
-dns_check() {
-    if echo "$DNS_OVERRIDE" | grep -q "false"; then
-        if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-            dns_off >>"$LOG" 2>&1
-        else
-            dns_off_sh
-        fi
-    fi
-}
-
-# Функция отключения системного DNS через "nohup"
-dns_off_sh() {
-	opkg install coreutils-nohup >>"$LOG" 2>&1
-	echo "Отключение системного DNS..."
-	echo ""
-  echo "Прошивка устройства меньше $REQUIRED_VERSION версии, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
-  echo ""
-  if [ "$hpanel" = "1" ]; then
-    complete_info
+# Проверка версии прошивки
+firmware_check() {
+  if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
+      dns_off >>"$LOG" 2>&1 &
   else
-    complete_info_no_panel
+      dns_off_sh
   fi
-  read -r
-  /opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
 }
 
-# Функция отклчюения системного DNS
+# Отклчюение системного DNS
 dns_off() {
 	ndmc -c 'opkg dns-override'
 	ndmc -c 'system configuration save'
 	sleep 3
 }
 
-# сообщение установка Ок
+# Отключение системного DNS через "nohup"
+dns_off_sh() {
+	opkg install coreutils-nohup >>"$LOG" 2>&1
+	echo "Отключение системного DNS..."
+  echo ""
+  if [ "$PANEL" = "1" ]; then
+    complete_info
+  else
+    complete_info_no_panel
+  fi
+  rm -- "$0"
+  read -r
+  /opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
+}
+
+# Сообщение установка ОK
 complete_info() {
   echo "Установка HydraRoute завершена"
   echo " - панель управления доступна по адресу: http://$IP_ADDRESS:2000/"
@@ -458,9 +449,9 @@ complete_info() {
 	echo "Нажмите Enter для перезагрузки (обязательно)."
 }
 
-# сообщение установка без панели
+# Сообщение установка без панели
 complete_info_no_panel() {
-  echo "HydraRoute установлен, но для hpanel не достаточно места"
+  echo "HydraRoute установлен, но для web-панели не достаточно места"
   echo " - редактирование ipset возможно только вручную (инструкция на GitHub)."
   echo ""
   echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
@@ -469,6 +460,14 @@ complete_info_no_panel() {
 	echo ""
 	echo "Нажмите Enter для перезагрузки (обязательно)."
 }
+
+# === main ===
+# Выход если места меньше 80Мб
+if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
+  echo "Не достаточно места для установки"
+  rm -- "$0"
+  exit 1
+fi
 
 # Запрос интерфейса у пользователя
 get_interfaces
@@ -493,24 +492,25 @@ animation $! "Добавление доменов в ipset"
 chmod_set >>"$LOG" 2>&1 &
 animation $! "Установка прав на выполнение скриптов"
 
+# установка web-панели если места больше 80Мб
 if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
-  hpanel="1"
-  install_hpanel >>"$LOG" 2>&1 &
-  animation $! "Установка hpanel"
+  PANEL="1"
+  install_panel >>"$LOG" 2>&1 &
+  animation $! "Установка web-панели"
 fi
 
 # Отключение системного DNS и сохранение
-dns_check
+firmware_check
 animation $! "Отключение системного DNS"
 
 # Завершение
 echo ""
-if [ "$hpanel" = "1" ]; then
+if [ "$PANEL" = "1" ]; then
   complete_info
 else
   complete_info_no_panel
 fi
-rm -- "$0" # Удаляем скрипт после выполнения
+rm -- "$0"
 
 # Ждем Enter и ребутимся
 read -r
