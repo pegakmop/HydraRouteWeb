@@ -1,7 +1,12 @@
 #!/bin/sh
 
-# Функция анимации
-loading_animation() {
+# Служебные функции и переменные
+LOG="/opt/var/log/HydraRoute.log"
+echo "$(date "+%Y-%m-%d %H:%M:%S") Удаление" >> "$LOG"
+VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
+REQUIRED_VERSION="4.2.3"
+## анимация
+animation() {
   local pid=$1
   local message=$2
   local spin='-\|/'
@@ -18,67 +23,74 @@ loading_animation() {
   echo -e "\b✔ Готово!"
 }
 
-
-# Функция удаления пакетов
-perform_opkg_uninstall() {
-  /opt/etc/init.d/S99adguardhome kill >/dev/null 2>&1
-  PACKAGES="adguardhome-go ipset iptables node-npm node"
+# удаление пакетов
+opkg_uninstall() {
+  /opt/etc/init.d/S99adguardhome kill
+  /opt/etc/init.d/S99hpanel kill
+  PACKAGES="adguardhome-go ipset iptables node-npm node tar"
   for pkg in $PACKAGES; do
-    opkg remove "$pkg" >/dev/null 2>&1
+    opkg remove "$pkg"
   done
 }
 
-# Функция удаления файлов
-perform_files_uninstall() {
-  chmod -R 777 /opt/etc/AdGuardHome/ >/dev/null 2>&1
-  chmod 777 /opt/etc/init.d/S52ipset >/dev/null 2>&1
-  chmod 777 /opt/var/log/AdGuardHome.log >/dev/null 2>&1
-  rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh >/dev/null 2>&1
-  rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh >/dev/null 2>&1
-  rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh >/dev/null 2>&1
-  rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh >/dev/null 2>&1
-  rm -f /opt/etc/init.d/S52ipset >/dev/null 2>&1
-  rm -rf /opt/etc/AdGuardHome/ >/dev/null 2>&1
-  rm -f /opt/var/log/AdGuardHome.log >/dev/null 2>&1
+# удаление файлов
+files_uninstall() {
+  chmod -R 777 /opt/etc/AdGuardHome/
+  chmod 777 /opt/etc/init.d/S52ipset
+  chmod 777 /opt/var/log/AdGuardHome.log
+  rm -f /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
+  rm -f /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
+  rm -f /opt/etc/ndm/netfilter.d/010-bypass.sh
+  rm -f /opt/etc/ndm/netfilter.d/011-bypass6.sh
+  rm -f /opt/etc/init.d/S52ipset
+  rm -rf /opt/etc/AdGuardHome/
+  rm -f /opt/var/log/AdGuardHome.log
 }
 
-# Функция удаления веб-панели
-perform_hpanel_uninstall() {
-  /opt/etc/init.d/S99hpanel kill >/dev/null 2>&1
-  chmod -R 777 /opt/etc/HydraRoute/ >/dev/null 2>&1
-  chmod 777 /opt/etc/init.d/S99hpanel >/dev/null 2>&1
-  rm -rf /opt/etc/HydraRoute/ >/dev/null 2>&1
-  rm -r /opt/etc/init.d/S99hpanel >/dev/null 2>&1
+# удаление веб-панели
+files_hpanel_uninstall() {
+  chmod -R 777 /opt/etc/HydraRoute/
+  chmod 777 /opt/etc/init.d/S99hpanel
+  rm -rf /opt/etc/HydraRoute/
+  rm -r /opt/etc/init.d/S99hpanel
 }
 
-perform_opkg_uninstall >/dev/null 2>&1 &
-loading_animation $! "Удаление opkg пакетов"
+# проверка версии прошивки
+firmware_check() {
+  if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
+      dns_on >>"$LOG" 2>&1 &
+  else
+      dns_on_sh
+  fi
+}
 
-perform_files_uninstall >/dev/null 2>&1 &
-loading_animation $! "Удаление файлов HydraRoute"
-
-perform_hpanel_uninstall >/dev/null 2>&1 &
-loading_animation $! "Удаление веб-панели"
-
-
-## Включение системного DNS сервера
-VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
-REQUIRED_VERSION="4.2.3"
-DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
-
-if echo "$DNS_OVERRIDE" | grep -q "true"; then
-    if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-	ndmc -c 'opkg no dns-override' >/dev/null 2>&1 &
- 	loading_animation $! "Включение системного DNS"
-	ndmc -c 'system configuration save' >/dev/null 2>&1 &
- 	loading_animation $! "Сохранение конфигурации"
+# включение системного DNS
+dns_on() {
+	ndmc -c 'opkg no dns-override'
+	ndmc -c 'system configuration save'
 	sleep 3
-    else
-        opkg install coreutils-nohup >/dev/null 2>&1
-        echo "Версия прошивки ниже $REQUIRED_VERSION, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
-		/opt/bin/nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >/dev/null 2>&1
-    fi
-fi
+}
+
+# включение системного DNS через "nohup"
+dns_on_sh() {
+	opkg install coreutils-nohup >>"$LOG" 2>&1
+  echo "Удаление завершено (╥_╥)"
+	echo "Включение системного DNS..."
+  echo "Перезагрузка..."
+  /opt/bin/nohup sh -c "ndmc -c 'opkg no dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
+}
+
+opkg_uninstall >>"$LOG" 2>&1 &
+animation $! "Удаление opkg пакетов"
+
+files_uninstall >>"$LOG" 2>&1 &
+animation $! "Удаление файлов HydraRoute"
+
+files_hpanel_uninstall >>"$LOG" 2>&1 &
+animation $! "Удаление веб-панели"
+
+firmware_check
+animation $! "Включение системного DNS"
 
 echo "Удаление завершено (╥_╥)"
 echo "Перезагрузка..."
