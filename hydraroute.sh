@@ -390,7 +390,7 @@ chmod_set() {
 install_panel() {
 	opkg install node tar
 	mkdir -p /opt/tmp
-	/opt/etc/init.d/S99hpanel kill
+	/opt/etc/init.d/S99hpanel stop
 	chmod -R 777 /opt/etc/HydraRoute/
 	chmod 777 /opt/etc/init.d/S99hpanel
 	rm -rf /opt/etc/HydraRoute/
