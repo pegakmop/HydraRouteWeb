@@ -40,11 +40,9 @@
 ## Дополнительная информация:
 ### Как добавить домены в ipset
 
-1. Через web панель.
-- Установить/переустановить/обновить:
-    ```
-    curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/webpanel/install.sh" | sh
-    ```
+1. Через [web-панель](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel).
+   - web-панель доступна по адресу: [http://192.168.2.1:2000/](http://192.168.2.1:2000/)
+     * (где 192.168.2.1 - это IP-адрес роутера)
 
 2. Вручную, правкой файла `ipset.conf`.
 
@@ -84,6 +82,7 @@
 - добавить дизайна
 - авторизация в web панели (нужна вообще она?)
 - написать wiki или FAQ
+- ~~переписать установщик~~
 
 ### Пожелания от пользоваталей
 - ~~[boosty](https://boosty.to/ground_zerro)~~
