@@ -14,18 +14,18 @@ rule2='||yabs.yandex.ru^$important'
 rule3='||mc.yandex.ru^$important'
 ## анимация
 animation() {
-  local pid=$1
-  local message=$2
-  local spin='-\|/'
+	local pid=$1
+	local message=$2
+	local spin='-\|/'
 
-  echo -n "$message... "
+	echo -n "$message... "
 
-  while kill -0 $pid 2>/dev/null; do
-    for i in $(seq 0 3); do
-      echo -ne "\b${spin:$i:1}"
-      usleep 100000  # 0.1 сек
-    done
-  done
+	while kill -0 $pid 2>/dev/null; do
+		for i in $(seq 0 3); do
+			echo -ne "\b${spin:$i:1}"
+			usleep 100000  # 0.1 сек
+		done
+	done
 
   echo -e "\b✔ Готово!"
 }
@@ -55,27 +55,23 @@ get_interfaces() {
         read -p "Введите ИМЯ интерфейса, через которое будет перенаправляться трафик: " net_interface
 
         if echo "$interface_list" | grep -qw "$net_interface"; then
-            #### Если интерфейс найден, завершаем цикл
             echo "Выбран интерфейс: $net_interface"
-            break
-        else
-            echo "Неверный выбор, необходимо ввести ИМЯ интерфейса из списка."
-        fi
-    done
+			break
+		else
+			echo "Неверный выбор, необходимо ввести ИМЯ интерфейса из списка."
+		fi
+	done
 }
 
 # Установка пакетов
 opkg_install() {
-  opkg update
-  PACKAGES="adguardhome-go ipset iptables ip-full"
-  for pkg in $PACKAGES; do
-    opkg install "$pkg"
-  done
+	opkg update
+	opkg install adguardhome-go ipset iptables ip-full
 }
 
 # Формирование файлов
 files_create() {
-	## ipset
+## ipset
 	cat << EOF > /opt/etc/init.d/S52ipset
 #!/bin/sh
 
@@ -89,7 +85,7 @@ if [ "\$1" = "start" ]; then
 fi
 EOF
 	
-	## скрипты маршрутизации
+## скрипты маршрутизации
 	cat << EOF > /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
 #!/bin/sh
 
@@ -114,7 +110,7 @@ if [ -z "\$(ip -6 route list table 1001)" ]; then
 fi
 EOF
 	
-	## cкрипты маркировки трафика
+## cкрипты маркировки трафика
 	cat << EOF > /opt/etc/ndm/netfilter.d/010-bypass.sh
 #!/bin/sh
 
@@ -146,7 +142,6 @@ EOF
 
 # Настройки AGH
 agh_setup() {
-	## останавливаем AdGuard Home
 	/opt/etc/init.d/S99adguardhome stop
 	## конфиг AdGuard Home
 	cat << EOF > /opt/etc/AdGuardHome/AdGuardHome.yaml
@@ -393,30 +388,30 @@ chmod_set() {
 
 # Установка web-панели
 install_panel() {
-  opkg install node tar
-  mkdir -p /opt/tmp
-  /opt/etc/init.d/S99hpanel kill
-  chmod -R 777 /opt/etc/HydraRoute/
-  chmod 777 /opt/etc/init.d/S99hpanel
-  rm -rf /opt/etc/HydraRoute/
-  rm -r /opt/etc/init.d/S99hpanel
-  curl -L -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/webpanel/hpanel.tar"
-  mkdir -p /opt/etc/HydraRoute
-  tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
-  rm /opt/tmp/hpanel.tar
-  mv /opt/etc/HydraRoute/S99hpanel /opt/etc/init.d/S99hpanel
-  chmod -R 444 /opt/etc/HydraRoute/
-  chmod 755 /opt/etc/init.d/S99hpanel
-  chmod 755 /opt/etc/HydraRoute/hpanel.js
+	opkg install node tar
+	mkdir -p /opt/tmp
+	/opt/etc/init.d/S99hpanel kill
+	chmod -R 777 /opt/etc/HydraRoute/
+	chmod 777 /opt/etc/init.d/S99hpanel
+	rm -rf /opt/etc/HydraRoute/
+	rm -r /opt/etc/init.d/S99hpanel
+	curl -L -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/webpanel/hpanel.tar"
+	mkdir -p /opt/etc/HydraRoute
+	tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
+	rm /opt/tmp/hpanel.tar
+	mv /opt/etc/HydraRoute/S99hpanel /opt/etc/init.d/S99hpanel
+	chmod -R 444 /opt/etc/HydraRoute/
+	chmod 755 /opt/etc/init.d/S99hpanel
+	chmod 755 /opt/etc/HydraRoute/hpanel.js
 }
 
 # Проверка версии прошивки
 firmware_check() {
-  if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-      dns_off >>"$LOG" 2>&1 &
-  else
-      dns_off_sh
-  fi
+	if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
+		dns_off >>"$LOG" 2>&1 &
+	else
+		dns_off_sh
+	fi
 }
 
 # Отклчюение системного DNS
@@ -430,31 +425,31 @@ dns_off() {
 dns_off_sh() {
 	opkg install coreutils-nohup >>"$LOG" 2>&1
 	echo "Отключение системного DNS..."
-  echo ""
-  if [ "$PANEL" = "1" ]; then
-    complete_info
-  else
-    complete_info_no_panel
-  fi
-  rm -- "$0"
-  read -r
-  /opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
+	echo ""
+	if [ "$PANEL" = "1" ]; then
+		complete_info
+	else
+		complete_info_no_panel
+	fi
+	rm -- "$0"
+	read -r
+	/opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
 }
 
 # Сообщение установка ОK
 complete_info() {
-  echo "Установка HydraRoute завершена"
-  echo " - панель управления доступна по адресу: http://$IP_ADDRESS:2000/"
+	echo "Установка HydraRoute завершена"
+	echo " - панель управления доступна по адресу: http://$IP_ADDRESS:2000/"
 	echo ""
 	echo "Нажмите Enter для перезагрузки (обязательно)."
 }
 
 # Сообщение установка без панели
 complete_info_no_panel() {
-  echo "HydraRoute установлен, но для web-панели не достаточно места"
-  echo " - редактирование ipset возможно только вручную (инструкция на GitHub)."
-  echo ""
-  echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
+	echo "HydraRoute установлен, но для web-панели не достаточно места"
+	echo " - редактирование ipset возможно только вручную (инструкция на GitHub)."
+	echo ""
+	echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
 	echo "Login: admin"
 	echo "Password: keenetic"
 	echo ""
@@ -464,9 +459,9 @@ complete_info_no_panel() {
 # === main ===
 # Выход если места меньше 80Мб
 if [ "$AVAILABLE_SPACE" -lt 81920 ]; then
-  echo "Не достаточно места для установки"
-  rm -- "$0"
-  exit 1
+	echo "Не достаточно места для установки"
+	rm -- "$0"
+	exit 1
 fi
 
 # Запрос интерфейса у пользователя
@@ -494,9 +489,9 @@ animation $! "Установка прав на выполнение скрипт
 
 # установка web-панели если места больше 80Мб
 if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
-  PANEL="1"
-  install_panel >>"$LOG" 2>&1 &
-  animation $! "Установка web-панели"
+	PANEL="1"
+	install_panel >>"$LOG" 2>&1 &
+	animation $! "Установка web-панели"
 fi
 
 # Отключение системного DNS и сохранение
@@ -506,9 +501,9 @@ animation $! "Отключение системного DNS"
 # Завершение
 echo ""
 if [ "$PANEL" = "1" ]; then
-  complete_info
+	complete_info
 else
-  complete_info_no_panel
+	complete_info_no_panel
 fi
 rm -- "$0"
 
