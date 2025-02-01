@@ -2,16 +2,19 @@
 
 # Служебные функции и переменные
 REQUIRED_VERSION="4.2.3"
+LOG="/opt/var/log/HydraRoute.log"
+echo "$(date "+%Y-%m-%d %H:%M:%S") Запуск установки" >> "$LOG"
 IP_ADDRESS=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 VERSION=$(ndmc -c show version | grep "title" | awk -F": " '{print $2}')
 DNS_OVERRIDE=$(curl -kfsS localhost:79/rci/opkg/dns-override)
+AVAILABLE_SPACE=$(df /opt | awk 'NR==2 {print $4}')
 ## Переменные для конфига AGH
 password=\$2y\$10\$fpdPsJjQMGNUkhXgalKGluJ1WFGBO6DKBJupOtBxIzckpJufHYpk.
 rule1='||*^$dnstype=HTTPS,dnsrewrite=NOERROR'
 rule2='||yabs.yandex.ru^$important'
 rule3='||mc.yandex.ru^$important'
 ## анимация
-loading_animation() {
+animation() {
   local pid=$1
   local message=$2
   local spin='-\|/'
@@ -68,11 +71,11 @@ get_interfaces() {
 
 # Функция установки пакетов
 opkg_install() {
-  opkg update >/dev/null 2>&1
-  /opt/etc/init.d/S99adguardhome kill >/dev/null 2>&1
+  opkg update
+  /opt/etc/init.d/S99adguardhome kill
   PACKAGES="adguardhome-go ipset iptables ip-full"
   for pkg in $PACKAGES; do
-    opkg install "$pkg" >/dev/null 2>&1
+    opkg install "$pkg"
   done
 }
 
@@ -387,52 +390,80 @@ EOF
 
 # Функция установки прав на скрипты
 chmod_set() {
-	chmod +x /opt/etc/init.d/S52ipset >/dev/null 2>&1
-	chmod +x /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh >/dev/null 2>&1
-	chmod +x /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh >/dev/null 2>&1
-	chmod +x /opt/etc/ndm/netfilter.d/010-bypass.sh >/dev/null 2>&1
-	chmod +x /opt/etc/ndm/netfilter.d/011-bypass6.sh >/dev/null 2>&1
+	chmod +x /opt/etc/init.d/S52ipset
+	chmod +x /opt/etc/ndm/ifstatechanged.d/010-bypass-table.sh
+	chmod +x /opt/etc/ndm/ifstatechanged.d/011-bypass6-table.sh
+	chmod +x /opt/etc/ndm/netfilter.d/010-bypass.sh
+	chmod +x /opt/etc/ndm/netfilter.d/011-bypass6.sh
+}
+
+# Установка hpanel
+install_hpanel() {
+  opkg install node tar
+  mkdir -p /opt/tmp
+  /opt/etc/init.d/S99hpanel kill
+  chmod -R 777 /opt/etc/HydraRoute/
+  chmod 777 /opt/etc/init.d/S99hpanel
+  rm -rf /opt/etc/HydraRoute/
+  rm -r /opt/etc/init.d/S99hpanel
+  curl -L -o /opt/tmp/hpanel.tar "https://github.com/Ground-Zerro/HydraRoute/raw/refs/heads/main/webpanel/hpanel.tar"
+  mkdir -p /opt/etc/HydraRoute
+  tar -xf /opt/tmp/hpanel.tar -C /opt/etc/HydraRoute/
+  rm /opt/tmp/hpanel.tar
+  mv /opt/etc/HydraRoute/S99hpanel /opt/etc/init.d/S99hpanel
+  chmod -R 444 /opt/etc/HydraRoute/
+  chmod 755 /opt/etc/init.d/S99hpanel
+  chmod 755 /opt/etc/HydraRoute/hpanel.js
 }
 
 # Функция проверки dns-override и версии прошивки
 dns_check() {
     if echo "$DNS_OVERRIDE" | grep -q "false"; then
         if [ "$(printf '%s\n' "$VERSION" "$REQUIRED_VERSION" | sort -V | tail -n1)" = "$VERSION" ]; then
-            dns_off >/dev/null 2>&1
+            dns_off >>"$LOG" 2>&1
         else
             dns_off_sh
         fi
     fi
 }
 
-# Функция отклчюения системного DNS через "nohup"
+# Функция отключения системного DNS через "nohup"
 dns_off_sh() {
-	opkg install coreutils-nohup >/dev/null 2>&1
+	opkg install coreutils-nohup >>"$LOG" 2>&1
 	echo "Отключение системного DNS..."
-	echo "Прошивка устройства меньше $REQUIRED_VERSION версии, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
 	echo ""
-	echo "AdGuard Home будет доступен по адресу: http://$IP_ADDRESS:3000/"
-	echo "Login: admin"
-	echo "Password: keenetic"
-	echo ""
-	echo "Для продолжения нажмите ENTER"
-	read -r
-	/opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >/dev/null 2>&1
+  echo "Прошивка устройства меньше $REQUIRED_VERSION версии, из-за чего SSH-сессия будет прервана, но скрипт корректно закончит работу и роутер будет перезагружен."
+  echo ""
+  if [ "$hpanel" = "1" ]; then
+    complete_info
+  else
+    complete_info_no_panel
+  fi
+  read -r
+  /opt/bin/nohup sh -c "ndmc -c 'opkg dns-override' && ndmc -c 'system configuration save' && sleep 3 && reboot" >>"$LOG" 2>&1
 }
 
-# Функция отклчюения системного DNS стандартно
+# Функция отклчюения системного DNS
 dns_off() {
-	ndmc -c 'opkg dns-override' 2>&1
-	ndmc -c 'system configuration save' 2>&1
+	ndmc -c 'opkg dns-override'
+	ndmc -c 'system configuration save'
 	sleep 3
 }
 
-# Функция информационное сообщение
-final_info() {
+# сообщение установка Ок
+complete_info() {
+  echo "Установка HydraRoute завершена"
+  echo " - панель управления доступна по адресу: http://$IP_ADDRESS:2000/"
 	echo ""
-	echo "Установка завершена."
-	echo ""
-	echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
+	echo "Нажмите Enter для перезагрузки (обязательно)."
+}
+
+# сообщение установка без панели
+complete_info_no_panel() {
+  echo "HydraRoute установлен, но для hpanel не достаточно места"
+  echo " - редактирование ipset возможно только вручную (инструкция на GitHub)."
+  echo ""
+  echo "AdGuard Home доступен по адресу: http://$IP_ADDRESS:3000/"
 	echo "Login: admin"
 	echo "Password: keenetic"
 	echo ""
@@ -443,34 +474,43 @@ final_info() {
 get_interfaces
 
 # Установка пакетов
-opkg_install >/dev/null 2>&1 &
-loading_animation $! "Установка необходимых пакетов"
+opkg_install >>"$LOG" 2>&1 &
+animation $! "Установка необходимых пакетов"
 
 # Формирование скриптов 
-files_create >/dev/null 2>&1 &
-loading_animation $! "Формируем скрипты"
+files_create >>"$LOG" 2>&1 &
+animation $! "Формируем скрипты"
 
 # Настройка AdGuard Home
-agh_setup >/dev/null 2>&1 &
-loading_animation $! "Настройка AdGuard Home"
+agh_setup >>"$LOG" 2>&1 &
+animation $! "Настройка AdGuard Home"
 
 # Добавление доменов в ipset
-domain_add >/dev/null 2>&1 &
-loading_animation $! "Добавление доменов в ipset"
+domain_add >>"$LOG" 2>&1 &
+animation $! "Добавление доменов в ipset"
 
 # Установка прав на выполнение скриптов
-chmod_set >/dev/null 2>&1 &
-loading_animation $! "Установка прав на выполнение скриптов"
+chmod_set >>"$LOG" 2>&1 &
+animation $! "Установка прав на выполнение скриптов"
+
+if [ "$AVAILABLE_SPACE" -gt 81920 ]; then
+  hpanel="1"
+  install_hpanel >>"$LOG" 2>&1 &
+  animation $! "Установка hpanel"
+fi
 
 # Отключение системного DNS и сохранение
 dns_check
-loading_animation $! "Отключение системного DNS"
+animation $! "Отключение системного DNS"
 
-# Информационное сообщение
-final_info
-
-# Удаляем скрипт после выполнения
-rm -- "$0"
+# Завершение
+echo ""
+if [ "$hpanel" = "1" ]; then
+  complete_info
+else
+  complete_info_no_panel
+fi
+rm -- "$0" # Удаляем скрипт после выполнения
 
 # Ждем Enter и ребутимся
 read -r
