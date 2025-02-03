@@ -78,11 +78,12 @@
 
 ## Планы на будущее
 ### To do
-- ~~Web панель в паблик релиз~~
+- починить работу на роутерах с ARM
+- ~~{Web панель в паблик релиз}(https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~
 - добавить дизайна
 - авторизация в web панели (нужна вообще она?)
 - написать wiki или FAQ
-- ~~переписать установщик~~
+- ~~{переписать установщик}(https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~
 
 ### Пожелания от пользоваталей
 - ~~[boosty](https://boosty.to/ground_zerro)~~
