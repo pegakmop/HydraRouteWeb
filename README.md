@@ -79,18 +79,18 @@
 ## Планы на будущее
 ### To do
 - починить работу на роутерах с ARM
-- ~~[Web панель в паблик релиз](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~
+- ~~[Web панель в паблик релиз](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~ 30/01/2025
 - добавить дизайна
 - авторизация в web панели (нужна вообще она?)
 - написать wiki или FAQ
 - загрузка сторонних списокв из сети
-- ~~[переписать установщик](https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~
+- ~~[переписать установщик](https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~ 01/02/2025
 
 ### Пожелания от пользоваталей
-- ~~[boosty](https://boosty.to/ground_zerro)~~
+- ~~[boosty](https://boosty.to/ground_zerro)~~ 25/01/2025
 - опция: блокировать трафик если туннель не доступен (нет связи, отключен и т.п.)
 - раздельная маршрутизация в два туннеля. Или в три?? ;)
 - расширение списка black листов
 - опция: автоматическое обновление списокв по расписанию
 - поддержка vless
-- ~~[анигилятор](https://github.com/Ground-Zerro/HydraRoute/blob/main/uninstall.sh)~~
+- ~~[анигилятор](https://github.com/Ground-Zerro/HydraRoute/blob/main/uninstall.sh)~~ 28/01/2025
