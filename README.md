@@ -33,14 +33,14 @@
 1. Подключитесь к роутеру по SSH (к Entware).
 2. Выполните команду:
     ```
-    curl -L -s "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
+    curl -L -s "https://raw.githubusercontent.com/pegakmop/HydraRouteWeb/refs/heads/main/hydraroute.sh" > /opt/tmp/hydraroute.sh && chmod +x /opt/tmp/hydraroute.sh && /opt/tmp/hydraroute.sh
     ```
 3. Выберите VPN из списка.
 
 ## Дополнительная информация:
 ### Как добавить домены в ipset
 
-1. Через [web-панель](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel).
+1. Через [web-панель](https://github.com/pegakmop/HydraRouteWeb/tree/main/webpanel).
    - web-панель доступна по адресу: [http://192.168.1.1:2000/](http://192.168.1.1:2000/)
      * (где `192.168.1.1` - это IP-адрес роутера)
 
@@ -74,23 +74,22 @@
 
 ## Удаление:
 
-    curl -Ls "https://raw.githubusercontent.com/Ground-Zerro/HydraRoute/refs/heads/main/uninstall.sh" | sh
+    curl -Ls "https://raw.githubusercontent.com/pegakmop/HydraRouteWeb/refs/heads/main/uninstall.sh" | sh
 
 ## Планы на будущее
 ### To do
 - ~~починить работу на роутерах с ARM~~
-- ~~[Web панель в паблик релиз](https://github.com/Ground-Zerro/HydraRoute/tree/main/webpanel)~~ 30/01/2025
+- ~~[Web панель в паблик релиз](https://github.com/pegakmop/HydraRouteWeb/tree/main/webpanel)~~ 30/01/2025
 - добавить дизайна
 - авторизация в web панели (нужна вообще она?)
 - написать wiki или FAQ
 - загрузка сторонних списокв из сети
-- ~~[переписать установщик](https://github.com/Ground-Zerro/HydraRoute/blob/main/hydraroute.sh)~~ 01/02/2025
+- ~~[переписать установщик](https://github.com/pegakmop/HydraRouteWeb/blob/main/hydraroute.sh)~~ 01/02/2025
 
 ### Пожелания от пользоваталей
-- ~~[boosty](https://boosty.to/ground_zerro)~~ 25/01/2025
 - опция: блокировать трафик если туннель не доступен (нет связи, отключен и т.п.)
 - раздельная маршрутизация в два туннеля. Или в три?? ;)
 - расширение списка black листов
 - опция: автоматическое обновление списокв по расписанию
 - поддержка vless
-- ~~[анигилятор](https://github.com/Ground-Zerro/HydraRoute/blob/main/uninstall.sh)~~ 28/01/2025
+- ~~[анигилятор](https://github.com/pegakmop/HydraRouteWeb/blob/main/uninstall.sh)~~ 28/01/2025
